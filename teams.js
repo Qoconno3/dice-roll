@@ -6,13 +6,13 @@
 // current browser tab and is never written back here.
 const DEFAULT_TEAMS = [
   {
-    id: "engineering",
-    name: "Engineering",
-    members: ["Alex", "Bailey", "Casey"],
+    id: "pyxis",
+    name: "Pyxis",
+    members: ["Adam", "Ben", "Mike", "Shayne", "Joe", "Quincy", "Aaron"],
   },
   {
-    id: "design",
-    name: "Design",
-    members: ["Dana", "Riley"],
+    id: "taurus",
+    name: "Taurus",
+    members: ["Adam", "Sathish", "Josh", "Ben", "Joe", "Sylvia", "Quincy"],
   },
 ];

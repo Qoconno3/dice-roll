@@ -10,23 +10,28 @@ const emptyHint = document.getElementById("empty-hint");
 const overflowHint = document.getElementById("overflow-hint");
 const rosterList = document.getElementById("roster-list");
 
-const MAX_FACES = 6;
+const MAX_FACES = 8;
 
-// Rotation (rotateY, rotateX, in degrees) that places each of the 6 faces of
-// a standard cube: four sides around the Y axis, plus top and bottom.
+// Rotation (rotateY, rotateX, rotateZ, in degrees) that places each of the 8
+// faces of a regular octahedron so they meet edge-to-edge, derived from the
+// actual d8 vertex geometry: rotateY/rotateX aim the face's outward normal,
+// rotateZ corrects the in-plane roll so adjacent triangles' edges line up.
 const FACE_GEOMETRY = [
-  { x: 0, y: 0 }, // front
-  { x: 0, y: 90 }, // right
-  { x: 0, y: 180 }, // back
-  { x: 0, y: -90 }, // left
-  { x: 90, y: 0 }, // top
-  { x: -90, y: 0 }, // bottom
+  { x: -35.264, y: 45, z: -60 },
+  { x: -35.264, y: 135, z: 60 },
+  { x: -35.264, y: -45, z: 60 },
+  { x: -35.264, y: -135, z: -60 },
+  { x: 35.264, y: -45, z: 120 },
+  { x: 35.264, y: -135, z: -120 },
+  { x: 35.264, y: 45, z: -120 },
+  { x: 35.264, y: 135, z: 120 },
 ];
-const FACE_TRANSLATE_Z = 70;
+const FACE_TRANSLATE_Z = 60;
 
 let faceLabelEls = [];
 let currentRotX = 0;
 let currentRotY = 0;
+let currentRotZ = 0;
 
 const manageModal = document.getElementById("manage-modal");
 const manageTitle = document.getElementById("manage-title");
@@ -70,10 +75,10 @@ function getFaceMembers(team) {
 
 function buildDieFaces() {
   dieSolid.innerHTML = "";
-  faceLabelEls = FACE_GEOMETRY.map(({ x, y }) => {
+  faceLabelEls = FACE_GEOMETRY.map(({ x, y, z }) => {
     const face = document.createElement("div");
     face.className = "die-face";
-    face.style.transform = `rotateY(${y}deg) rotateX(${x}deg) translateZ(${FACE_TRANSLATE_Z}px)`;
+    face.style.transform = `rotateY(${y}deg) rotateX(${x}deg) translateZ(${FACE_TRANSLATE_Z}px) rotateZ(${z}deg)`;
 
     const label = document.createElement("span");
     label.className = "die-face-label";
@@ -165,16 +170,19 @@ function rollDice() {
 
   const winnerIndex = Math.floor(Math.random() * members.length);
   const winner = members[winnerIndex];
-  const { x, y } = FACE_GEOMETRY[winnerIndex];
+  const { x, y, z } = FACE_GEOMETRY[winnerIndex];
 
   const spinTurnsX = 2 + Math.floor(Math.random() * 2);
   const spinTurnsY = 2 + Math.floor(Math.random() * 2);
+  const spinTurnsZ = 2 + Math.floor(Math.random() * 2);
   const targetX = angleAtLeast(currentRotX, -x) + spinTurnsX * 360;
   const targetY = angleAtLeast(currentRotY, -y) + spinTurnsY * 360;
+  const targetZ = angleAtLeast(currentRotZ, -z) + spinTurnsZ * 360;
 
   currentRotX = targetX;
   currentRotY = targetY;
-  dieSolid.style.transform = `rotateX(${targetX}deg) rotateY(${targetY}deg)`;
+  currentRotZ = targetZ;
+  dieSolid.style.transform = `rotateZ(${targetZ}deg) rotateX(${targetX}deg) rotateY(${targetY}deg)`;
 
   dieSolid.addEventListener(
     "transitionend",
