@@ -66,6 +66,27 @@ section {
   margin-right: -4px;
 }
 
+.team-bar-hint {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+}
+
+.hint code,
+.modal-hint code {
+  background: var(--panel-light);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.modal-hint {
+  margin: 0 0 6px;
+  padding: 8px 10px;
+  background: rgba(224, 96, 112, 0.12);
+  border: 1px solid rgba(224, 96, 112, 0.35);
+  border-radius: 8px;
+}
+
 select,
 input[type="text"] {
   background: var(--panel-light);

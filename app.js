@@ -1,6 +1,3 @@
-const STORAGE_KEY = "standup-picker-teams";
-const ACTIVE_TEAM_KEY = "standup-picker-active-team";
-
 const teamSelect = document.getElementById("team-select");
 const newTeamBtn = document.getElementById("new-team-btn");
 const manageTeamBtn = document.getElementById("manage-team-btn");
@@ -28,12 +25,10 @@ let editingNames = [];
 let isRolling = false;
 
 function loadState() {
-  try {
-    teams = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  } catch {
-    teams = [];
-  }
-  activeTeamId = localStorage.getItem(ACTIVE_TEAM_KEY);
+  // Deep-copied from teams.js (loaded before this script) so in-app edits
+  // never mutate the hardcoded defaults. Nothing here is persisted — a
+  // reload always starts fresh from teams.js.
+  teams = DEFAULT_TEAMS.map((t) => ({ ...t, members: [...t.members] }));
 
   if (teams.length === 0) {
     teams.push({
@@ -43,18 +38,7 @@ function loadState() {
     });
   }
 
-  if (!teams.some((t) => t.id === activeTeamId)) {
-    activeTeamId = teams[0].id;
-  }
-
-  saveState();
-}
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(teams));
-  if (activeTeamId) {
-    localStorage.setItem(ACTIVE_TEAM_KEY, activeTeamId);
-  }
+  activeTeamId = teams[0].id;
 }
 
 function getActiveTeam() {
@@ -213,7 +197,6 @@ function saveTeamFromModal() {
     activeTeamId = newTeam.id;
   }
 
-  saveState();
   closeManageModal();
   render();
 }
@@ -226,13 +209,11 @@ function deleteActiveTeam() {
 
   teams = teams.filter((t) => t.id !== team.id);
   activeTeamId = teams[0].id;
-  saveState();
   render();
 }
 
 teamSelect.addEventListener("change", () => {
   activeTeamId = teamSelect.value;
-  saveState();
   render();
 });
 
