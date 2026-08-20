@@ -139,43 +139,76 @@ input[type="text"]:focus {
 }
 
 .die {
-  width: 180px;
-  height: 180px;
-  border-radius: 24px;
-  background: linear-gradient(145deg, var(--panel-light), #262a40);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 0 0 2px #3d4360;
+  position: relative;
+  width: 200px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  perspective: 700px;
 }
 
-.die.rolling {
-  animation: shake 0.25s infinite;
+.die-shape-wrap {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(-14deg) rotateY(24deg);
+  filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.45));
+  will-change: transform;
 }
 
-@keyframes shake {
-  0% { transform: rotate(0deg) scale(1); }
-  25% { transform: rotate(-6deg) scale(1.03); }
-  50% { transform: rotate(0deg) scale(1); }
-  75% { transform: rotate(6deg) scale(1.03); }
-  100% { transform: rotate(0deg) scale(1); }
+.die-shape {
+  width: 100%;
+  height: 100%;
 }
 
-.die.landed {
-  animation: land 0.35s ease;
+.die.rolling .die-shape-wrap {
+  animation: tumble 0.55s linear infinite;
+}
+
+@keyframes tumble {
+  0%   { transform: rotateX(-14deg)  rotateY(24deg)  rotateZ(0deg); }
+  20%  { transform: rotateX(140deg)  rotateY(100deg) rotateZ(60deg); }
+  40%  { transform: rotateX(260deg)  rotateY(220deg) rotateZ(140deg); }
+  60%  { transform: rotateX(360deg)  rotateY(340deg) rotateZ(220deg); }
+  80%  { transform: rotateX(480deg)  rotateY(460deg) rotateZ(300deg); }
+  100% { transform: rotateX(586deg)  rotateY(564deg) rotateZ(384deg); }
+}
+
+.die.landed .die-shape-wrap {
+  animation: land 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes land {
-  0% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+  0%   { transform: rotateX(30deg) rotateY(-40deg) rotateZ(-15deg) scale(1.18) translateY(-10px); }
+  55%  { transform: rotateX(-20deg) rotateY(30deg) rotateZ(8deg) scale(0.94) translateY(4px); }
+  75%  { transform: rotateX(-8deg) rotateY(18deg) rotateZ(-3deg) scale(1.03); }
+  100% { transform: rotateX(-14deg) rotateY(24deg) rotateZ(0deg) scale(1); }
 }
 
 #die-face {
-  font-size: 1.4rem;
-  font-weight: 600;
+  position: relative;
+  z-index: 2;
+  background: rgba(18, 20, 32, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 6px 14px;
+  max-width: 78%;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
   word-break: break-word;
   line-height: 1.3;
+  pointer-events: none;
+}
+
+.die.rolling #die-face {
+  animation: pulse 0.18s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); }
+  to   { transform: scale(1.06); }
 }
 
 .hint {
