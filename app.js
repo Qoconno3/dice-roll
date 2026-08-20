@@ -4,10 +4,29 @@ const manageTeamBtn = document.getElementById("manage-team-btn");
 const deleteTeamBtn = document.getElementById("delete-team-btn");
 
 const die = document.getElementById("die");
-const dieFace = document.getElementById("die-face");
+const dieSolid = document.getElementById("die-solid");
 const rollBtn = document.getElementById("roll-btn");
 const emptyHint = document.getElementById("empty-hint");
+const overflowHint = document.getElementById("overflow-hint");
 const rosterList = document.getElementById("roster-list");
+
+const MAX_FACES = 6;
+
+// Rotation (rotateY, rotateX, in degrees) that places each of the 6 faces of
+// a standard cube: four sides around the Y axis, plus top and bottom.
+const FACE_GEOMETRY = [
+  { x: 0, y: 0 }, // front
+  { x: 0, y: 90 }, // right
+  { x: 0, y: 180 }, // back
+  { x: 0, y: -90 }, // left
+  { x: 90, y: 0 }, // top
+  { x: -90, y: 0 }, // bottom
+];
+const FACE_TRANSLATE_Z = 70;
+
+let faceLabelEls = [];
+let currentRotX = 0;
+let currentRotY = 0;
 
 const manageModal = document.getElementById("manage-modal");
 const manageTitle = document.getElementById("manage-title");
@@ -43,6 +62,39 @@ function loadState() {
 
 function getActiveTeam() {
   return teams.find((t) => t.id === activeTeamId) || null;
+}
+
+function getFaceMembers(team) {
+  return team ? team.members.slice(0, MAX_FACES) : [];
+}
+
+function buildDieFaces() {
+  dieSolid.innerHTML = "";
+  faceLabelEls = FACE_GEOMETRY.map(({ x, y }) => {
+    const face = document.createElement("div");
+    face.className = "die-face";
+    face.style.transform = `rotateY(${y}deg) rotateX(${x}deg) translateZ(${FACE_TRANSLATE_Z}px)`;
+
+    const label = document.createElement("span");
+    label.className = "die-face-label";
+    face.appendChild(label);
+
+    dieSolid.appendChild(face);
+    return { face, label };
+  });
+}
+
+function renderDieFaces() {
+  const team = getActiveTeam();
+  const members = getFaceMembers(team);
+
+  faceLabelEls.forEach(({ face, label }, i) => {
+    const name = members[i] || "";
+    label.textContent = name;
+    face.classList.toggle("blank", !name);
+  });
+
+  overflowHint.classList.toggle("hidden", !team || team.members.length <= MAX_FACES);
 }
 
 function renderTeamSelect() {
@@ -83,52 +135,58 @@ function renderDiceState() {
   const hasMembers = team && team.members.length > 0;
   rollBtn.disabled = !hasMembers || isRolling;
   emptyHint.classList.toggle("hidden", hasMembers);
-  if (!hasMembers) {
-    dieFace.textContent = "?";
-  }
 }
 
 function render(winnerName) {
   renderTeamSelect();
   renderRoster(winnerName);
   renderDiceState();
+  renderDieFaces();
+}
+
+// Smallest angle >= current that is congruent to targetMod (degrees) mod 360.
+function angleAtLeast(current, targetMod) {
+  const targetNorm = ((targetMod % 360) + 360) % 360;
+  const currentNorm = ((current % 360) + 360) % 360;
+  let diff = targetNorm - currentNorm;
+  if (diff < 0) diff += 360;
+  return current + diff;
 }
 
 function rollDice() {
   const team = getActiveTeam();
-  if (!team || team.members.length === 0 || isRolling) return;
+  const members = getFaceMembers(team);
+  if (members.length === 0 || isRolling) return;
 
   isRolling = true;
   rollBtn.disabled = true;
-  die.classList.add("rolling");
   die.classList.remove("landed");
+  die.classList.add("rolling");
 
-  const members = team.members;
-  const totalTicks = 16;
-  let tick = 0;
-  let delay = 80;
+  const winnerIndex = Math.floor(Math.random() * members.length);
+  const winner = members[winnerIndex];
+  const { x, y } = FACE_GEOMETRY[winnerIndex];
 
-  function step() {
-    const randomName = members[Math.floor(Math.random() * members.length)];
-    dieFace.textContent = randomName;
-    tick++;
+  const spinTurnsX = 2 + Math.floor(Math.random() * 2);
+  const spinTurnsY = 2 + Math.floor(Math.random() * 2);
+  const targetX = angleAtLeast(currentRotX, -x) + spinTurnsX * 360;
+  const targetY = angleAtLeast(currentRotY, -y) + spinTurnsY * 360;
 
-    if (tick >= totalTicks) {
-      const winner = members[Math.floor(Math.random() * members.length)];
-      dieFace.textContent = winner;
+  currentRotX = targetX;
+  currentRotY = targetY;
+  dieSolid.style.transform = `rotateX(${targetX}deg) rotateY(${targetY}deg)`;
+
+  dieSolid.addEventListener(
+    "transitionend",
+    () => {
       die.classList.remove("rolling");
       die.classList.add("landed");
       isRolling = false;
       rollBtn.disabled = false;
       renderRoster(winner);
-      return;
-    }
-
-    delay += 12;
-    setTimeout(step, delay);
-  }
-
-  setTimeout(step, delay);
+    },
+    { once: true }
+  );
 }
 
 function openManageModal(isNewTeam) {
@@ -238,4 +296,5 @@ manageModal.addEventListener("click", (e) => {
 rollBtn.addEventListener("click", rollDice);
 
 loadState();
+buildDieFaces();
 render();
