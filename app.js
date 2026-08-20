@@ -149,6 +149,27 @@ function render(winnerName) {
   renderDieFaces();
 }
 
+// Unbiased random integer in [0, maxExclusive) using the Web Crypto API's
+// CSPRNG (OS/hardware-sourced entropy) instead of Math.random(), which is a
+// fast deterministic PRNG never intended for fairness-sensitive picks.
+// Rejection sampling discards the tail of the 32-bit range that doesn't
+// divide evenly by maxExclusive, so every outcome stays equally likely.
+function randomInt(maxExclusive) {
+  if (maxExclusive <= 1) return 0;
+  if (!window.crypto || !window.crypto.getRandomValues) {
+    return Math.floor(Math.random() * maxExclusive);
+  }
+  const range = 0x100000000; // 2^32
+  const rejectionLimit = range - (range % maxExclusive);
+  const buf = new Uint32Array(1);
+  let value;
+  do {
+    window.crypto.getRandomValues(buf);
+    value = buf[0];
+  } while (value >= rejectionLimit);
+  return value % maxExclusive;
+}
+
 // Smallest angle >= current that is congruent to targetMod (degrees) mod 360.
 function angleAtLeast(current, targetMod) {
   const targetNorm = ((targetMod % 360) + 360) % 360;
@@ -168,13 +189,13 @@ function rollDice() {
   die.classList.remove("landed");
   die.classList.add("rolling");
 
-  const winnerIndex = Math.floor(Math.random() * members.length);
+  const winnerIndex = randomInt(members.length);
   const winner = members[winnerIndex];
   const { x, y, z } = FACE_GEOMETRY[winnerIndex];
 
-  const spinTurnsX = 2 + Math.floor(Math.random() * 2);
-  const spinTurnsY = 2 + Math.floor(Math.random() * 2);
-  const spinTurnsZ = 2 + Math.floor(Math.random() * 2);
+  const spinTurnsX = 2 + randomInt(2);
+  const spinTurnsY = 2 + randomInt(2);
+  const spinTurnsZ = 2 + randomInt(2);
   const targetX = angleAtLeast(currentRotX, -x) + spinTurnsX * 360;
   const targetY = angleAtLeast(currentRotY, -y) + spinTurnsY * 360;
   const targetZ = angleAtLeast(currentRotZ, -z) + spinTurnsZ * 360;
