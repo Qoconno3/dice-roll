@@ -8,11 +8,11 @@ const DEFAULT_TEAMS = [
   {
     id: "pyxis",
     name: "Pyxis",
-    members: ["Adam", "Benjamin", "Mike", "Shayne", "Joe", "Quincy", "Aaron"],
+    members: ["Adam", "Benjamin", "Mike", "Shayne", "Joe", "Quincy", "Aaron", "Steven"],
   },
   {
     id: "taurus",
     name: "Taurus",
-    members: ["Adam", "Sathish", "Josh", "Benjamin", "Joe", "Sylvia", "Quincy"],
+    members: ["Adam", "Sathish", "Josh", "Benjamin", "Joe", "Sylvia", "Quincy", "Aaron"],
   },
 ];
