@@ -10,10 +10,7 @@ const rosterList = document.getElementById("roster-list");
 const statusLabel = document.getElementById("status-label");
 const resultText = document.getElementById("result-text");
 
-// A classic 6-sided pip die. It's purely decorative/ceremonial — the pip
-// face it lands on carries no meaning — so the winner is picked
-// independently and revealed as text, which also means every team member
-// is always eligible regardless of team size.
+
 const PIPS = {
   1: [4],
   2: [0, 8],
@@ -30,7 +27,6 @@ const FACE_DEFS = [
   { value: 3, transform: "rotateX(90deg) translateZ(75px)" },
   { value: 4, transform: "rotateX(-90deg) translateZ(75px)" },
 ];
-// Rotation needed to bring each face value to the front, facing the viewer.
 const FACE_ROT = {
   1: { rx: 0, ry: 0 },
   2: { rx: 0, ry: -90 },
@@ -57,9 +53,7 @@ let editingNames = [];
 let isRolling = false;
 
 function loadState() {
-  // Deep-copied from teams.js (loaded before this script) so in-app edits
-  // never mutate the hardcoded defaults. Nothing here is persisted — a
-  // reload always starts fresh from teams.js.
+
   teams = DEFAULT_TEAMS.map((t) => ({ ...t, members: [...t.members] }));
 
   if (teams.length === 0) {
@@ -196,16 +190,10 @@ themeToggleBtn.addEventListener("click", () => {
   try {
     localStorage.setItem(THEME_KEY, next);
   } catch {
-    // Preference just won't persist across reloads; the toggle itself
-    // still works for the current visit.
   }
 });
 
-// Unbiased random integer in [0, maxExclusive) using the Web Crypto API's
-// CSPRNG (OS/hardware-sourced entropy) instead of Math.random(), which is a
-// fast deterministic PRNG never intended for fairness-sensitive picks.
-// Rejection sampling discards the tail of the 32-bit range that doesn't
-// divide evenly by maxExclusive, so every outcome stays equally likely.
+
 function randomInt(maxExclusive) {
   if (maxExclusive <= 1) return 0;
   if (!window.crypto || !window.crypto.getRandomValues) {
@@ -222,7 +210,6 @@ function randomInt(maxExclusive) {
   return value % maxExclusive;
 }
 
-// Smallest angle >= current that is congruent to targetMod (degrees) mod 360.
 function angleAtLeast(current, targetMod) {
   const targetNorm = ((targetMod % 360) + 360) % 360;
   const currentNorm = ((current % 360) + 360) % 360;
