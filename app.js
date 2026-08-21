@@ -1,7 +1,7 @@
 const teamSelect = document.getElementById("team-select");
 const newTeamBtn = document.getElementById("new-team-btn");
 const manageTeamBtn = document.getElementById("manage-team-btn");
-const deleteTeamBtn = document.getElementById("delete-team-btn");
+const themeToggleBtn = document.getElementById("theme-toggle");
 
 const die = document.getElementById("die");
 const dieSolid = document.getElementById("die-solid");
@@ -111,7 +111,6 @@ function renderTeamSelect() {
     if (team.id === activeTeamId) option.selected = true;
     teamSelect.appendChild(option);
   });
-  deleteTeamBtn.disabled = teams.length <= 1;
 }
 
 function renderRoster(winnerName) {
@@ -169,6 +168,43 @@ function randomInt(maxExclusive) {
   } while (value >= rejectionLimit);
   return value % maxExclusive;
 }
+
+const THEME_KEY = "standup-picker-theme";
+
+function applyTheme(theme) {
+  if (theme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+    themeToggleBtn.textContent = "☀️";
+    themeToggleBtn.setAttribute("aria-label", "Switch to light mode");
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+    themeToggleBtn.textContent = "🌙";
+    themeToggleBtn.setAttribute("aria-label", "Switch to dark mode");
+  }
+}
+
+function loadTheme() {
+  let stored = null;
+  try {
+    stored = localStorage.getItem(THEME_KEY);
+  } catch {
+    // localStorage unavailable (private browsing, blocked storage) — fall
+    // back to the light default below.
+  }
+  applyTheme(stored === "dark" ? "dark" : "light");
+}
+
+themeToggleBtn.addEventListener("click", () => {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const next = isDark ? "light" : "dark";
+  applyTheme(next);
+  try {
+    localStorage.setItem(THEME_KEY, next);
+  } catch {
+    // Preference just won't persist across reloads; the toggle itself
+    // still works for the current visit.
+  }
+});
 
 // Smallest angle >= current that is congruent to targetMod (degrees) mod 360.
 function angleAtLeast(current, targetMod) {
@@ -288,17 +324,6 @@ function saveTeamFromModal() {
   render();
 }
 
-function deleteActiveTeam() {
-  if (teams.length <= 1) return;
-  const team = getActiveTeam();
-  if (!team) return;
-  if (!confirm(`Delete team "${team.name}"? This cannot be undone.`)) return;
-
-  teams = teams.filter((t) => t.id !== team.id);
-  activeTeamId = teams[0].id;
-  render();
-}
-
 teamSelect.addEventListener("change", () => {
   activeTeamId = teamSelect.value;
   render();
@@ -306,7 +331,6 @@ teamSelect.addEventListener("change", () => {
 
 newTeamBtn.addEventListener("click", () => openManageModal(true));
 manageTeamBtn.addEventListener("click", () => openManageModal(false));
-deleteTeamBtn.addEventListener("click", deleteActiveTeam);
 
 addNameBtn.addEventListener("click", addNameFromInput);
 nameInput.addEventListener("keydown", (e) => {
@@ -324,6 +348,7 @@ manageModal.addEventListener("click", (e) => {
 
 rollBtn.addEventListener("click", rollDice);
 
+loadTheme();
 loadState();
 buildDieFaces();
 render();

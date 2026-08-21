@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Standup Leader Picker</title>
+<title>Who's Leading Standup?</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode">🌙</button>
+
   <div class="app">
     <header>
-      <h1>🎲 Standup Leader Picker</h1>
-      <p class="subtitle">Roll the dice to pick who leads today's standup</p>
+      <h1>🎲 Who's Leading Standup?</h1>
     </header>
 
     <section class="team-bar">
@@ -18,8 +19,6 @@
       <select id="team-select"></select>
       <button id="new-team-btn" class="btn btn-secondary">New Team</button>
       <button id="manage-team-btn" class="btn btn-secondary">Manage Names</button>
-      <button id="delete-team-btn" class="btn btn-danger">Delete Team</button>
-      <p class="hint team-bar-hint">Teams are defined in <code>teams.js</code>. Changes made here are temporary — they last only for this browser tab and reset on reload.</p>
     </section>
 
     <section class="dice-area">
@@ -40,7 +39,6 @@
   <div id="manage-modal" class="modal hidden">
     <div class="modal-content">
       <h2 id="manage-title">Manage Names</h2>
-      <p class="hint modal-hint">⚠️ Temporary for this browser tab only — reloading the page resets everything back to what's defined in <code>teams.js</code>.</p>
 
       <label for="team-name-input">Team name</label>
       <input id="team-name-input" type="text" placeholder="e.g. Platform Team" />

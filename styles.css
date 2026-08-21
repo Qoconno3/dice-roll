@@ -1,14 +1,37 @@
 :root {
-  --bg: #1b1e2b;
+  --bg-grad-a: #f7f3f2;
+  --bg-grad-b: #efe7e5;
+  --panel: #ffffff;
+  --panel-light: #f1eae8;
+  --text: #221e1d;
+  --muted: #8a817f;
+  --border: #e2d8d6;
+  --accent: #6c8cff;
+  --accent-dark: #4c68d9;
+  --danger: #c0293a;
+  --radius: 12px;
+
+  --die-highlight: #f4a6a1;
+  --die-mid: #d0202d;
+  --die-dark: #7a0f16;
+  --die-border: #3a0d10;
+  --die-label: #2a0709;
+  --die-blank-highlight: #d9c6c5;
+  --die-blank-mid: #a5908e;
+  --die-blank-dark: #6b5654;
+}
+
+:root[data-theme="dark"] {
+  --bg-grad-a: #1b1e2b;
+  --bg-grad-b: #23283c;
   --panel: #262a3b;
   --panel-light: #313650;
   --text: #eef0f8;
   --muted: #9aa0b4;
+  --border: #3d4360;
   --accent: #6c8cff;
   --accent-dark: #4c68d9;
   --danger: #e06070;
-  --danger-dark: #c04858;
-  --radius: 12px;
 }
 
 * {
@@ -18,12 +41,35 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(160deg, #1b1e2b, #23283c);
+  background: linear-gradient(160deg, var(--bg-grad-a), var(--bg-grad-b));
   color: var(--text);
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   display: flex;
   justify-content: center;
   padding: 32px 16px;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .app {
@@ -37,17 +83,14 @@ header {
 }
 
 header h1 {
-  margin: 0 0 4px;
-  font-size: 1.8rem;
-}
-
-.subtitle {
   margin: 0;
-  color: var(--muted);
+  font-size: 1.8rem;
+  text-wrap: balance;
 }
 
 section {
   background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;
   margin-bottom: 20px;
@@ -66,32 +109,11 @@ section {
   margin-right: -4px;
 }
 
-.team-bar-hint {
-  flex-basis: 100%;
-  margin: 4px 0 0;
-}
-
-.hint code,
-.modal-hint code {
-  background: var(--panel-light);
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 0.85em;
-}
-
-.modal-hint {
-  margin: 0 0 6px;
-  padding: 8px 10px;
-  background: rgba(224, 96, 112, 0.12);
-  border: 1px solid rgba(224, 96, 112, 0.35);
-  border-radius: 8px;
-}
-
 select,
 input[type="text"] {
   background: var(--panel-light);
   color: var(--text);
-  border: 1px solid #3d4360;
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 1rem;
@@ -137,18 +159,7 @@ input[type="text"]:focus {
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #3a4060;
-}
-
-.btn-danger {
-  background: transparent;
-  color: var(--danger);
-  border: 1px solid var(--danger);
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: var(--danger);
-  color: white;
+  background: var(--border);
 }
 
 .dice-area {
@@ -168,7 +179,7 @@ input[type="text"]:focus {
   justify-content: center;
   perspective: 900px;
   transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.3));
 }
 
 .die.landed {
@@ -191,7 +202,7 @@ input[type="text"]:focus {
 }
 
 .die.rolling {
-  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.45)) brightness(1.08);
+  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.3)) brightness(1.05);
 }
 
 .die-face {
@@ -203,8 +214,8 @@ input[type="text"]:focus {
   margin-left: -74px;
   margin-top: -85.3px;
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-  background: linear-gradient(160deg, #b7c3ff, #6c8cff 55%, #3a4894);
-  border: 1.5px solid #20233b;
+  background: linear-gradient(160deg, var(--die-highlight), var(--die-mid) 55%, var(--die-dark));
+  border: 1.5px solid var(--die-border);
   backface-visibility: hidden;
   display: flex;
   align-items: flex-end;
@@ -214,14 +225,14 @@ input[type="text"]:focus {
 }
 
 .die-face.blank {
-  background: linear-gradient(160deg, #3a4060, #2b2f47 55%, #23273c);
-  opacity: 0.65;
+  background: linear-gradient(160deg, var(--die-blank-highlight), var(--die-blank-mid) 55%, var(--die-blank-dark));
+  opacity: 0.6;
 }
 
 .die-face-label {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #14172a;
+  color: var(--die-label);
   text-align: center;
   line-height: 1.15;
   max-width: 90%;
@@ -287,6 +298,7 @@ input[type="text"]:focus {
 
 .modal-content {
   background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
   width: 100%;
@@ -346,4 +358,11 @@ input[type="text"]:focus {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .die, .die-solid, .btn, .theme-toggle {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
