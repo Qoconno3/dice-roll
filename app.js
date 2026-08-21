@@ -1,5 +1,4 @@
 const teamSelect = document.getElementById("team-select");
-const newTeamBtn = document.getElementById("new-team-btn");
 const manageTeamBtn = document.getElementById("manage-team-btn");
 const themeToggleBtn = document.getElementById("theme-toggle");
 
@@ -7,34 +6,44 @@ const die = document.getElementById("die");
 const dieSolid = document.getElementById("die-solid");
 const rollBtn = document.getElementById("roll-btn");
 const emptyHint = document.getElementById("empty-hint");
-const overflowHint = document.getElementById("overflow-hint");
 const rosterList = document.getElementById("roster-list");
+const statusLabel = document.getElementById("status-label");
+const resultText = document.getElementById("result-text");
 
-const MAX_FACES = 8;
-
-// Rotation (rotateY, rotateX, rotateZ, in degrees) that places each of the 8
-// faces of a regular octahedron so they meet edge-to-edge, derived from the
-// actual d8 vertex geometry: rotateY/rotateX aim the face's outward normal,
-// rotateZ corrects the in-plane roll so adjacent triangles' edges line up.
-const FACE_GEOMETRY = [
-  { x: -35.264, y: 45, z: -60 },
-  { x: -35.264, y: 135, z: 60 },
-  { x: -35.264, y: -45, z: 60 },
-  { x: -35.264, y: -135, z: -60 },
-  { x: 35.264, y: -45, z: 120 },
-  { x: 35.264, y: -135, z: -120 },
-  { x: 35.264, y: 45, z: -120 },
-  { x: 35.264, y: 135, z: 120 },
+// A classic 6-sided pip die. It's purely decorative/ceremonial — the pip
+// face it lands on carries no meaning — so the winner is picked
+// independently and revealed as text, which also means every team member
+// is always eligible regardless of team size.
+const PIPS = {
+  1: [4],
+  2: [0, 8],
+  3: [0, 4, 8],
+  4: [0, 2, 6, 8],
+  5: [0, 2, 4, 6, 8],
+  6: [0, 2, 3, 5, 6, 8],
+};
+const FACE_DEFS = [
+  { value: 1, transform: "rotateY(0deg) translateZ(75px)" },
+  { value: 6, transform: "rotateY(180deg) translateZ(75px)" },
+  { value: 2, transform: "rotateY(90deg) translateZ(75px)" },
+  { value: 5, transform: "rotateY(-90deg) translateZ(75px)" },
+  { value: 3, transform: "rotateX(90deg) translateZ(75px)" },
+  { value: 4, transform: "rotateX(-90deg) translateZ(75px)" },
 ];
-const FACE_TRANSLATE_Z = 60;
+// Rotation needed to bring each face value to the front, facing the viewer.
+const FACE_ROT = {
+  1: { rx: 0, ry: 0 },
+  2: { rx: 0, ry: -90 },
+  3: { rx: -90, ry: 0 },
+  4: { rx: 90, ry: 0 },
+  5: { rx: 0, ry: 90 },
+  6: { rx: 0, ry: 180 },
+};
 
-let faceLabelEls = [];
 let currentRotX = 0;
 let currentRotY = 0;
-let currentRotZ = 0;
 
 const manageModal = document.getElementById("manage-modal");
-const manageTitle = document.getElementById("manage-title");
 const teamNameInput = document.getElementById("team-name-input");
 const nameInput = document.getElementById("name-input");
 const addNameBtn = document.getElementById("add-name-btn");
@@ -44,7 +53,6 @@ const cancelTeamBtn = document.getElementById("cancel-team-btn");
 
 let teams = [];
 let activeTeamId = null;
-let editingTeamId = null;
 let editingNames = [];
 let isRolling = false;
 
@@ -69,37 +77,27 @@ function getActiveTeam() {
   return teams.find((t) => t.id === activeTeamId) || null;
 }
 
-function getFaceMembers(team) {
-  return team ? team.members.slice(0, MAX_FACES) : [];
-}
-
 function buildDieFaces() {
   dieSolid.innerHTML = "";
-  faceLabelEls = FACE_GEOMETRY.map(({ x, y, z }) => {
+  FACE_DEFS.forEach(({ value, transform }) => {
     const face = document.createElement("div");
     face.className = "die-face";
-    face.style.transform = `rotateY(${y}deg) rotateX(${x}deg) translateZ(${FACE_TRANSLATE_Z}px) rotateZ(${z}deg)`;
+    face.style.transform = transform;
 
-    const label = document.createElement("span");
-    label.className = "die-face-label";
-    face.appendChild(label);
+    const active = PIPS[value];
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement("div");
+      cell.className = "die-pip-cell";
+      if (active.includes(i)) {
+        const pip = document.createElement("div");
+        pip.className = "die-pip";
+        cell.appendChild(pip);
+      }
+      face.appendChild(cell);
+    }
 
     dieSolid.appendChild(face);
-    return { face, label };
   });
-}
-
-function renderDieFaces() {
-  const team = getActiveTeam();
-  const members = getFaceMembers(team);
-
-  faceLabelEls.forEach(({ face, label }, i) => {
-    const name = members[i] || "";
-    label.textContent = name;
-    face.classList.toggle("blank", !name);
-  });
-
-  overflowHint.classList.toggle("hidden", !team || team.members.length <= MAX_FACES);
 }
 
 function renderTeamSelect() {
@@ -119,19 +117,36 @@ function renderRoster(winnerName) {
   const members = team ? team.members : [];
 
   if (members.length === 0) {
-    const li = document.createElement("li");
-    li.className = "empty";
-    li.textContent = "No names yet — click \"Manage Names\" to add your team.";
-    rosterList.appendChild(li);
+    const span = document.createElement("span");
+    span.className = "text-muted";
+    span.textContent = "No names yet — click \"Manage Team\" to add your team.";
+    rosterList.appendChild(span);
     return;
   }
 
   members.forEach((name) => {
-    const li = document.createElement("li");
-    li.textContent = name;
-    if (winnerName && name === winnerName) li.classList.add("winner");
-    rosterList.appendChild(li);
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.textContent = name;
+    if (winnerName && name === winnerName) chip.classList.add("winner");
+    rosterList.appendChild(chip);
   });
+}
+
+function renderResult(state, winnerName) {
+  if (state === "rolling") {
+    statusLabel.textContent = "Rolling";
+    resultText.textContent = "…";
+    resultText.classList.remove("winner");
+  } else if (state === "revealed") {
+    statusLabel.textContent = "Leading today";
+    resultText.textContent = winnerName;
+    resultText.classList.add("winner");
+  } else {
+    statusLabel.textContent = "Press roll";
+    resultText.textContent = "—";
+    resultText.classList.remove("winner");
+  }
 }
 
 function renderDiceState() {
@@ -145,28 +160,8 @@ function render(winnerName) {
   renderTeamSelect();
   renderRoster(winnerName);
   renderDiceState();
-  renderDieFaces();
-}
-
-// Unbiased random integer in [0, maxExclusive) using the Web Crypto API's
-// CSPRNG (OS/hardware-sourced entropy) instead of Math.random(), which is a
-// fast deterministic PRNG never intended for fairness-sensitive picks.
-// Rejection sampling discards the tail of the 32-bit range that doesn't
-// divide evenly by maxExclusive, so every outcome stays equally likely.
-function randomInt(maxExclusive) {
-  if (maxExclusive <= 1) return 0;
-  if (!window.crypto || !window.crypto.getRandomValues) {
-    return Math.floor(Math.random() * maxExclusive);
-  }
-  const range = 0x100000000; // 2^32
-  const rejectionLimit = range - (range % maxExclusive);
-  const buf = new Uint32Array(1);
-  let value;
-  do {
-    window.crypto.getRandomValues(buf);
-    value = buf[0];
-  } while (value >= rejectionLimit);
-  return value % maxExclusive;
+  renderResult("idle");
+  rollBtn.textContent = "Roll the dice";
 }
 
 const THEME_KEY = "standup-picker-theme";
@@ -206,6 +201,27 @@ themeToggleBtn.addEventListener("click", () => {
   }
 });
 
+// Unbiased random integer in [0, maxExclusive) using the Web Crypto API's
+// CSPRNG (OS/hardware-sourced entropy) instead of Math.random(), which is a
+// fast deterministic PRNG never intended for fairness-sensitive picks.
+// Rejection sampling discards the tail of the 32-bit range that doesn't
+// divide evenly by maxExclusive, so every outcome stays equally likely.
+function randomInt(maxExclusive) {
+  if (maxExclusive <= 1) return 0;
+  if (!window.crypto || !window.crypto.getRandomValues) {
+    return Math.floor(Math.random() * maxExclusive);
+  }
+  const range = 0x100000000; // 2^32
+  const rejectionLimit = range - (range % maxExclusive);
+  const buf = new Uint32Array(1);
+  let value;
+  do {
+    window.crypto.getRandomValues(buf);
+    value = buf[0];
+  } while (value >= rejectionLimit);
+  return value % maxExclusive;
+}
+
 // Smallest angle >= current that is congruent to targetMod (degrees) mod 360.
 function angleAtLeast(current, targetMod) {
   const targetNorm = ((targetMod % 360) + 360) % 360;
@@ -217,50 +233,46 @@ function angleAtLeast(current, targetMod) {
 
 function rollDice() {
   const team = getActiveTeam();
-  const members = getFaceMembers(team);
+  const members = team ? team.members : [];
   if (members.length === 0 || isRolling) return;
 
   isRolling = true;
   rollBtn.disabled = true;
-  die.classList.remove("landed");
-  die.classList.add("rolling");
+  rollBtn.textContent = "Rolling…";
+  renderResult("rolling");
 
   const winnerIndex = randomInt(members.length);
   const winner = members[winnerIndex];
-  const { x, y, z } = FACE_GEOMETRY[winnerIndex];
+  const targetFace = 1 + randomInt(6);
+  const target = FACE_ROT[targetFace];
 
   const spinTurnsX = 2 + randomInt(2);
   const spinTurnsY = 2 + randomInt(2);
-  const spinTurnsZ = 2 + randomInt(2);
-  const targetX = angleAtLeast(currentRotX, -x) + spinTurnsX * 360;
-  const targetY = angleAtLeast(currentRotY, -y) + spinTurnsY * 360;
-  const targetZ = angleAtLeast(currentRotZ, -z) + spinTurnsZ * 360;
+  const targetX = angleAtLeast(currentRotX, target.rx) + spinTurnsX * 360;
+  const targetY = angleAtLeast(currentRotY, target.ry) + spinTurnsY * 360;
 
   currentRotX = targetX;
   currentRotY = targetY;
-  currentRotZ = targetZ;
-  dieSolid.style.transform = `rotateZ(${targetZ}deg) rotateX(${targetX}deg) rotateY(${targetY}deg)`;
+  dieSolid.style.transform = `rotateX(${targetX}deg) rotateY(${targetY}deg)`;
 
   dieSolid.addEventListener(
     "transitionend",
     () => {
-      die.classList.remove("rolling");
-      die.classList.add("landed");
       isRolling = false;
       rollBtn.disabled = false;
+      rollBtn.textContent = "Roll again";
+      renderResult("revealed", winner);
       renderRoster(winner);
     },
     { once: true }
   );
 }
 
-function openManageModal(isNewTeam) {
-  const team = isNewTeam ? null : getActiveTeam();
-  editingTeamId = isNewTeam ? null : team.id;
-  editingNames = isNewTeam ? [] : [...team.members];
+function openManageModal() {
+  const team = getActiveTeam();
+  editingNames = team ? [...team.members] : [];
 
-  manageTitle.textContent = isNewTeam ? "New Team" : "Manage Names";
-  teamNameInput.value = isNewTeam ? "" : team.name;
+  teamNameInput.value = team ? team.name : "";
   nameInput.value = "";
   renderModalNameList();
   manageModal.classList.remove("hidden");
@@ -306,19 +318,9 @@ function saveTeamFromModal() {
     return;
   }
 
-  if (editingTeamId) {
-    const team = teams.find((t) => t.id === editingTeamId);
-    team.name = name;
-    team.members = [...editingNames];
-  } else {
-    const newTeam = {
-      id: crypto.randomUUID(),
-      name,
-      members: [...editingNames],
-    };
-    teams.push(newTeam);
-    activeTeamId = newTeam.id;
-  }
+  const team = getActiveTeam();
+  team.name = name;
+  team.members = [...editingNames];
 
   closeManageModal();
   render();
@@ -329,8 +331,7 @@ teamSelect.addEventListener("change", () => {
   render();
 });
 
-newTeamBtn.addEventListener("click", () => openManageModal(true));
-manageTeamBtn.addEventListener("click", () => openManageModal(false));
+manageTeamBtn.addEventListener("click", openManageModal);
 
 addNameBtn.addEventListener("click", addNameFromInput);
 nameInput.addEventListener("keydown", (e) => {

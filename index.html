@@ -7,53 +7,66 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode">🌙</button>
+  <button id="theme-toggle" class="btn btn-icon btn-secondary theme-toggle" type="button" aria-label="Switch to dark mode">🌙</button>
 
-  <div class="app">
-    <header>
-      <h1>🎲 Who's Leading Standup?</h1>
-    </header>
+  <main class="page">
+    <div class="eyebrow">Morning Standup</div>
+    <h1>Who's Leading Standup?</h1>
+    <hr class="hr">
 
-    <section class="team-bar">
-      <label for="team-select">Team</label>
-      <select id="team-select"></select>
-      <button id="new-team-btn" class="btn btn-secondary">New Team</button>
-      <button id="manage-team-btn" class="btn btn-secondary">Manage Names</button>
-    </section>
-
-    <section class="dice-area">
-      <div id="die" class="die">
-        <div id="die-solid" class="die-solid"></div>
+    <div class="team-row">
+      <div class="field">
+        <label for="team-select">Team</label>
+        <select id="team-select" class="input"></select>
       </div>
-      <button id="roll-btn" class="btn btn-primary">Roll the Dice</button>
-      <p id="empty-hint" class="hint hidden">Add at least one name to this team to roll.</p>
-      <p id="overflow-hint" class="hint hidden">This die has 8 sides — only the first 8 members are shown and rollable.</p>
-    </section>
+      <button id="manage-team-btn" class="btn btn-secondary" type="button">Manage Team</button>
+    </div>
 
-    <section class="roster">
-      <h2>Current Team Members</h2>
-      <ul id="roster-list" class="roster-list"></ul>
-    </section>
-  </div>
+    <div class="roll-row">
+      <div class="die-wrap">
+        <div id="die" class="die">
+          <div id="die-solid" class="die-solid"></div>
+        </div>
+      </div>
+      <div class="result">
+        <div id="status-label" class="eyebrow">Press roll</div>
+        <div id="result-text" class="result-text">—</div>
+      </div>
+    </div>
 
-  <div id="manage-modal" class="modal hidden">
-    <div class="modal-content">
-      <h2 id="manage-title">Manage Names</h2>
+    <div class="actions">
+      <button id="roll-btn" class="btn btn-primary" type="button">Roll the dice</button>
+      <p id="empty-hint" class="hint text-muted hidden">Add at least one name to this team to roll.</p>
+    </div>
 
-      <label for="team-name-input">Team name</label>
-      <input id="team-name-input" type="text" placeholder="e.g. Platform Team" />
+    <div class="roster-block">
+      <div class="eyebrow">Members</div>
+      <div id="roster-list" class="chip-row"></div>
+    </div>
+  </main>
 
-      <label for="name-input">Add a name</label>
-      <div class="add-name-row">
-        <input id="name-input" type="text" placeholder="e.g. Alex" />
-        <button id="add-name-btn" class="btn btn-secondary">Add</button>
+  <div id="manage-modal" class="dialog-backdrop hidden">
+    <div class="dialog">
+      <div class="dialog-title">Manage Team</div>
+
+      <div class="field">
+        <label for="team-name-input">Team name</label>
+        <input id="team-name-input" class="input" type="text" placeholder="e.g. Platform Team" />
+      </div>
+
+      <div class="field">
+        <label for="name-input">Add a name</label>
+        <div class="add-name-row">
+          <input id="name-input" class="input" type="text" placeholder="e.g. Alex" />
+          <button id="add-name-btn" class="btn btn-secondary" type="button">Add</button>
+        </div>
       </div>
 
       <ul id="modal-name-list" class="modal-name-list"></ul>
 
-      <div class="modal-actions">
-        <button id="save-team-btn" class="btn btn-primary">Save Team</button>
-        <button id="cancel-team-btn" class="btn btn-secondary">Cancel</button>
+      <div class="dialog-actions">
+        <button id="cancel-team-btn" class="btn btn-secondary" type="button">Cancel</button>
+        <button id="save-team-btn" class="btn btn-primary" type="button">Save Team</button>
       </div>
     </div>
   </div>
